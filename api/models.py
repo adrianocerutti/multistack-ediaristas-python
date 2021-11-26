@@ -61,8 +61,11 @@ class Diaria(models.Model):
         (7, "TRANSFERIDO")
     )
 
+<<<<<<< HEAD
     servico = models.ForeignKey(Servico, null=True, blank=False, on_delete=models.DO_NOTHING)
 
+=======
+>>>>>>> 64fa7e66db0d7ddd3cb49bce42c7981ea748b27d
     data_atendimento = models.DateTimeField(null=False, blank=False)
     tempo_atendimento = models.IntegerField(null=False, blank=False)
     status = models.IntegerField(null=False, blank=False, choices=STATUS_DIARIA_CHOICES,

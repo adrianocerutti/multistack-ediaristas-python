@@ -1,4 +1,5 @@
 from django.core.exceptions import ValidationError
+
 from django.db import models
 from rest_framework import serializers
 from ..models import Diaria, Usuario
@@ -72,4 +73,8 @@ class DiariaSerializer(serializers.ModelSerializer):
         if (data_atendimento.hour + self.initial_data["tempo_atendimento"]) > 22:
             raise serializers.ValidationError("O horário de atendimento não pode passar das 22:00")
         return data_atendimento
-    
+        valor_comissao = validated_data["preco"] - (
+            validated_data["preco"] * servico.porcentagem_comissao / 100)
+        print(valor_comissao)
+        diaria = Diaria.objects.create(cliente_id=self.context['request'].user.id,**validated_data)
+        return diaria
