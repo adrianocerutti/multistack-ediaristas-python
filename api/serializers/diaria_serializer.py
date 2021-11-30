@@ -1,11 +1,13 @@
 from django.core.exceptions import ValidationError
 
 from django.db import models
+from django.urls import reverse
 from rest_framework import serializers
 from ..models import Diaria, Usuario
 from administracao.services import servico_service
 from ..services.cidades_atendimento_service import (buscar_cidade_ibge, verificar_disponibilidade_cidade, 
 buscar_cidade_cep)
+from ..hateoas import Hateoas
 
 class UsuarioDiariaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -15,6 +17,7 @@ class UsuarioDiariaSerializer(serializers.ModelSerializer):
 class DiariaSerializer(serializers.ModelSerializer):
     cliente = UsuarioDiariaSerializer(read_only=True)
     valor_comissao = serializers.DecimalField(read_only=True, max_digits=5, decimal_places=2)
+    links = serializers.SerializerMethodField(required=False)
     class Meta:
         model = Diaria
         fields = '__all__'
@@ -73,8 +76,18 @@ class DiariaSerializer(serializers.ModelSerializer):
         if (data_atendimento.hour + self.initial_data["tempo_atendimento"]) > 22:
             raise serializers.ValidationError("O horário de atendimento não pode passar das 22:00")
         return data_atendimento
+
         valor_comissao = validated_data["preco"] - (
             validated_data["preco"] * servico.porcentagem_comissao / 100)
         print(valor_comissao)
         diaria = Diaria.objects.create(cliente_id=self.context['request'].user.id,**validated_data)
         return diaria
+
+    def get_links(self, obj):
+        usuario = self.context['request'].user
+        links = Hateoas()
+        if obj.status == 1:
+            if usuario.tipo_usuario == 1:
+                links.add_post('pagar_diaria', reverse('pagamento-diaria-list', 
+                kwargs={'diaria_id':obj.id}))
+        return links.to_array()
